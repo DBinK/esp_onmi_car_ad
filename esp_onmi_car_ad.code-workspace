@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../../../../IT/BoardA"
+		},
+		{
+			"path": "../../../../IT/esp_onmi_car_2"
+		},
+		{
+			"path": "../esp_fly_ad"
+		}
+	],
+	"settings": {}
+}
