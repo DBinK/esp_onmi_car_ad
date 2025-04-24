@@ -17,3 +17,4 @@ void loop() {
     Serial.println(encoder.get_speed());
     delay(10);
 }
+
