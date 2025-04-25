@@ -124,7 +124,7 @@ class Motion
 {
 public:
     Motion(const int encoder_pins[8], const int motor_pins[8],
-           PIDCtrlVal &posVals[4], PIDCtrlVal &rateVals[4])
+           PIDCtrlVal posVals[4], PIDCtrlVal rateVals[4])
         : encoders(encoder_pins),
           motors(motor_pins),
           pidPos(posVals),
