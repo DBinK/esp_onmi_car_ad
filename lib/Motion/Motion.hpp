@@ -46,7 +46,7 @@ public:
         encoder_rb.set_filter(ns);
     }
 
-    void get_encoder_counts(MeasureValue &msPos)
+    void get_encoder_counts(MeasureVal &msPos)
     {
         msPos.LF = encoder_lf.get_count();
         msPos.RF = encoder_rf.get_count();
@@ -54,7 +54,7 @@ public:
         msPos.LB = encoder_lb.get_count();
     }
 
-    void get_encoder_speeds(MeasureValue &msRate)
+    void get_encoder_speeds(MeasureVal &msRate)
     {
         msRate.LF = encoder_lf.get_speed();
         msRate.RF = encoder_rf.get_speed();
@@ -92,14 +92,6 @@ public:
         motor_rb.setSpeedLimit(THR_MIN, THR_MAX);
     }
 
-    void set_motor_speed(TargetValue tgRate)
-    {
-        motor_lf.setSpeed(tgRate.LF);
-        motor_rf.setSpeed(tgRate.RF);
-        motor_lb.setSpeed(tgRate.LB);
-        motor_rb.setSpeed(tgRate.RB);
-    }
-
     void set_motor_speed_lf(int16_t rate_in)
     {
         motor_lf.setSpeed(rate_in);
@@ -131,21 +123,21 @@ protected:
 class Motion
 {
 public:
-    Motion(const int encoder_pins[8], const int motor_pins[8])
+    Motion(const int encoder_pins[8], const int motor_pins[8], PIDCtrlVal PIDCtrlVals[4])
         : encoders(encoder_pins),
-          motors(motor_pins)
+          motors(motor_pins),
+          pidPos(PIDCtrlVals),
+          pidRate(PIDCtrlVals)
           {
             encoders.setup(50);               // 设置编码器频率
             encoders.set_encoder_filter(10);  // 设置编码器滤波器
             motors.set_motor_limit(0, 1023);  // 设置电机速度限制
           }
-    void setup() {  
-        posPID.SetTunings(POS.P, POS.I, POS.D);
-        posPID.SetOutputLimits(-1023, 1023);
+          
+    // void setup() {  
+    //     // 设置PID参数
+    // }
 
-        ratePID.SetTunings(RATE.P, RATE.I, RATE.D);
-        ratePID.SetOutputLimits(-1023, 1023);
-    }
     void pid_control_task(void *parameter) {
 
         static TickType_t xLastWakeTime = 0;
@@ -157,20 +149,28 @@ public:
             }
             vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(10)); // 10ms
 
-            // 获取编码器数据
-            encoders.get_encoder_counts(msPos);
+            // 更新编码器数据
+            // encoders.get_encoder_counts(msPos)
             encoders.get_encoder_speeds(msRate);
+            // pidPos.UpdateMeasure(msPos);
+            pidRate.UpdateMeasure(msRate);
 
+            // 计算PID控制
+            // pidPos.Compute();
+            pidRate.Compute();
 
+            motors.set_motor_speed_lf(rateLF.out);
+            motors.set_motor_speed_rf(rateRF.out);
+            motors.set_motor_speed_lb(rateLB.out);
+            motors.set_motor_speed_rb(rateRB.out);
         }
     }
 
 protected:
     Encoders encoders;
     Motors motors;
-
-    QuickPID posPID;
-    QuickPID ratePID;
+    PIDControllers pidPos;
+    PIDControllers pidRate;
 };
 
 #endif
