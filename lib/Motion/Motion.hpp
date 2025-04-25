@@ -79,7 +79,7 @@ public:
         : motor_lf(pins[0], pins[1]),
           motor_rf(pins[2], pins[3]),
           motor_lb(pins[4], pins[5]),
-          motor_rb(pins[6], pins[7]),
+          motor_rb(pins[6], pins[7])
     {
         set_motor_limit(0, 1023);  // 设置默认电机速度限制
     }
@@ -133,10 +133,6 @@ public:
             encoders.set_encoder_filter(10);  // 设置编码器滤波器
             motors.set_motor_limit(0, 1023);  // 设置电机速度限制
           }
-          
-    // void setup() {  
-    //     // 设置PID参数
-    // }
 
     void pid_control_task(void *parameter) {
 
