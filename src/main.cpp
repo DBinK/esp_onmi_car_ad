@@ -1,40 +1,50 @@
-#include "Motor.hpp"
 
-Motor motor(14, 13, 0, 1023);
+#include <Arduino.h>
+#include "Motion.hpp"
+
+// 定义引脚
+const int encoderPins[] = {4, 6, 39, 40, 21, 34, 12, 11}; // 编码器引脚
+const int motorPins[]   = {1, 2, 14, 13, 38, 36, 8, 10};  // 电机引脚
+
+// 创建Encoders和Motors对象
+Encoders encoders(encoderPins);
+Motors motors(motorPins);
 
 void setup() {
-    //调试串口初始化
-    Serial.begin(115200);
-    Serial.println("start");
+  Serial.begin(115200);              // 初始化串口
+  encoders.setup();                  // 初始化编码器
+  encoders.set_encoder_filter(10);  // 设置编码器滤波器
 
-    delay(5000);
-    
-    int8_t pwmValue = map(abs(50), 0, 100, 0, 1023);
-    
-    Serial.println(pwmValue);
-    
-    // analogWriteResolution(10);  // 设置PWM分辨率为10位 
-    // analogWrite(14, 500);
-    // digitalWrite(13, LOW);
+  // 设置电机速度
+  int16_t motorSpeeds[4] = {0, 20, 50, 80};
+  motors.set_motor_speed(motorSpeeds);
 }
+
 void loop() {
-    Serial.println("Set  speed to 20");
-    motor.setSpeed(20);
-    delay(1000);
 
-    Serial.println("Set  speed to 50");
-    motor.setSpeed(50);
-    delay(1000);
+  // 读取编码器计数
+  int64_t encoderCounts[4];
+  encoders.get_encoder_counts(encoderCounts);
+  Serial.print("\nEncoder Counts: LF=");
+  Serial.print(encoderCounts[LF]);
+  Serial.print(", RF=");
+  Serial.print(encoderCounts[RF]);
+  Serial.print(", LB=");
+  Serial.print(encoderCounts[LB]);
+  Serial.print(", RB=");
+  Serial.println(encoderCounts[RB]);
 
-    Serial.println("Set  speed to 80");
-    motor.setSpeed(80);
-    delay(1000);
+  // 读取编码器速度
+  int32_t encoderSpeeds[4];
+  encoders.get_encoder_speeds(encoderSpeeds);
+  Serial.print("Encoder Speeds: LF=");
+  Serial.print(encoderSpeeds[LF]);
+  Serial.print(", RF=");
+  Serial.print(encoderSpeeds[RF]);
+  Serial.print(", LB=");
+  Serial.print(encoderSpeeds[LB]);
+  Serial.print(", RB=");
+  Serial.println(encoderSpeeds[RB]);
 
-    Serial.println("Set  speed to 30");
-    motor.setSpeed(30);
-    delay(1000);
-
-    Serial.println("Set  speed to 0");
-    motor.setSpeed(0);
-    delay(3000);
+  delay(1000); // 每秒读取一次
 }
