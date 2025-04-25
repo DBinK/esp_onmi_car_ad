@@ -29,10 +29,12 @@ class Motor {
          * @brief 设置电机的转速
          * @param rate 
          */
-        void setSpeed(int16_t rate) {
-            int8_t pwmValue = map(abs(rate), 0, 100, _THR_MIN, _THR_MAX);
+        void setSpeed(int8_t rate) {
+            Serial.println(rate);
+            uint16_t pwmValue = map(abs(rate), 0, 100, _THR_MIN, _THR_MAX);
+            Serial.println(pwmValue);
             pwmValue = constrain(pwmValue, _THR_MIN, _THR_MAX);
-    
+            Serial.println(pwmValue);
             if (rate > 0) {
                 analogWrite(_FW_PIN, pwmValue);
                 digitalWrite(_BW_PIN, LOW);
@@ -47,7 +49,7 @@ class Motor {
 
         /**
          * @brief 设置电机的上下限
-         * @param THR_MIN, THR_MAX 
+         * @param rate 
          */
         void setSpeedLimit(uint16_t THR_MIN, uint16_t THR_MAX) {
             _THR_MIN = THR_MIN;
@@ -57,8 +59,8 @@ class Motor {
     private:
         uint8_t _FW_PIN;
         uint8_t _BW_PIN;
-        int8_t _THR_MIN;
-        int8_t _THR_MAX;
+        uint16_t _THR_MIN;
+        uint16_t _THR_MAX;
     };
     
     #endif
