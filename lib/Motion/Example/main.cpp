@@ -1,56 +1,50 @@
-/*
- * @LastEditors: qingmeijiupiao
- * @Description:HXC线程库示例
- * @Author: qingmeijiupiao
- * @Date: 2024-10-17 22:00:39
- */
+
 #include <Arduino.h>
-#include "HXCthread.hpp"
-#include <tuple>
+#include "Motion.hpp"
 
-void task_func(std::tuple<int,float,const char*> param) {
-    int param1 = std::get<0>(param);
-    float param2 = std::get<1>(param);
-    const char* param3 = std::get<2>(param);
-    while (1){
-        Serial.println("task_func1");
-        Serial.print("param:  ");
-        Serial.print(param1);
-        Serial.print(",");
-        Serial.print(param2);
-        Serial.print(",");
-        Serial.println(param3);
-        delay(1000);
-    }
-};
- 
-//线程1
-HXC::thread<std::tuple<int,float,const char*>> thread1(task_func);  
+// 定义引脚
+const int encoderPins[] = {4, 6, 39, 40, 21, 34, 12, 11}; // 编码器引脚
+const int motorPins[]   = {1, 2, 14, 13, 38, 36, 8, 10};  // 电机引脚
 
-//线程2
-HXC::thread<void> thread2([](){
-
-    while (1){
-        Serial.println("task_func2");
-        
-        delay(1000);
-    }
-});
+// 创建Encoders和Motors对象
+Encoders encoders(encoderPins);
+Motors motors(motorPins);
 
 void setup() {
-
-    Serial.begin(115200);
-
-    //启动线程1
-    thread1.start(std::make_tuple(1,3.14,"hello"));
-
-    //启动线程2
-    thread2.start("task2");
-
+  Serial.begin(115200);              // 初始化串口
+  encoders.setup();                  // 初始化编码器
+  encoders.set_encoder_filter(100);  // 设置编码器滤波器
+  motors.set_motor_limit(100, 255);  // 设置电机速度限制
 }
 
 void loop() {
-    delay(1000);
+  // 设置电机速度
+  int8_t motorSpeeds[4] = {0, 20, 50, 80};
+  motors.set_motor_speed(motorSpeeds);
+
+  // 读取编码器计数
+  int64_t encoderCounts[4];
+  encoders.get_encoder_counts(encoderCounts);
+  Serial.print("Encoder Counts: LF=");
+  Serial.print(encoderCounts[LF]);
+  Serial.print(", RF=");
+  Serial.print(encoderCounts[RF]);
+  Serial.print(", LB=");
+  Serial.print(encoderCounts[LB]);
+  Serial.print(", RB=");
+  Serial.println(encoderCounts[RB]);
+
+  // 读取编码器速度
+  int32_t encoderSpeeds[4];
+  encoders.get_encoder_speeds(encoderSpeeds);
+  Serial.print("Encoder Speeds: LF=");
+  Serial.print(encoderSpeeds[LF]);
+  Serial.print(", RF=");
+  Serial.print(encoderSpeeds[RF]);
+  Serial.print(", LB=");
+  Serial.print(encoderSpeeds[LB]);
+  Serial.print(", RB=");
+  Serial.println(encoderSpeeds[RB]);
+
+  delay(1000); // 每秒读取一次
 }
-
-
