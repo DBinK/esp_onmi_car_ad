@@ -29,8 +29,8 @@ class Motor {
          * @brief 设置电机的转速
          * @param rate 
          */
-        void setSpeed(uint16_t rate) {
-            uint16_t pwmValue = map(abs(rate), 0, 100, _THR_MIN, _THR_MAX);
+        void setSpeed(int8_t rate) {
+            int8_t pwmValue = map(abs(rate), 0, 100, _THR_MIN, _THR_MAX);
             pwmValue = constrain(pwmValue, _THR_MIN, _THR_MAX);
     
             if (rate > 0) {
@@ -44,12 +44,21 @@ class Motor {
                 digitalWrite(_BW_PIN, LOW);
             }
         }
+
+        /**
+         * @brief 设置电机的上下限
+         * @param rate 
+         */
+        void setSpeedLimit(uint16_t THR_MIN, uint16_t THR_MAX) {
+            _THR_MIN = THR_MIN;
+            _THR_MAX = THR_MAX;
+        }
     
     private:
         uint8_t _FW_PIN;
         uint8_t _BW_PIN;
-        uint16_t _THR_MIN;
-        uint16_t _THR_MAX;
+        int8_t _THR_MIN;
+        int8_t _THR_MAX;
     };
     
     #endif

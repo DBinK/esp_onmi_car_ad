@@ -13,5 +13,9 @@
 			"path": "../esp_fly_ad"
 		}
 	],
-	"settings": {}
+	"settings": {
+		"files.associations": {
+			"cmath": "cpp"
+		}
+	}
 }
