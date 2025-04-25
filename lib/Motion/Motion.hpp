@@ -133,31 +133,44 @@ class Motion
 public:
     Motion(const int encoder_pins[8], const int motor_pins[8])
         : encoders(encoder_pins),
-          motors(motor_pins) 
+          motors(motor_pins)
           {
             encoders.setup(50);               // 设置编码器频率
             encoders.set_encoder_filter(10);  // 设置编码器滤波器
             motors.set_motor_limit(0, 1023);  // 设置电机速度限制
           }
-    
+    void setup() {  
+        posPID.SetTunings(POS.P, POS.I, POS.D);
+        posPID.SetOutputLimits(-1023, 1023);
+
+        ratePID.SetTunings(RATE.P, RATE.I, RATE.D);
+        ratePID.SetOutputLimits(-1023, 1023);
+    }
     void pid_control_task(void *parameter) {
-        int64_t msPosValue[4] = 0;
 
         static TickType_t xLastWakeTime = 0;
 
         while (1) {
-            
+            // 延时周期设置
             if (xLastWakeTime == 0) {  // 修正 vTaskDelayUntil 的使用
                 xLastWakeTime = xTaskGetTickCount();
             }
             vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(10)); // 10ms
-            encoders.get_encoder_counts
+
+            // 获取编码器数据
+            encoders.get_encoder_counts(msPos);
+            encoders.get_encoder_speeds(msRate);
+
+
         }
     }
 
 protected:
     Encoders encoders;
     Motors motors;
+
+    QuickPID posPID;
+    QuickPID ratePID;
 };
 
 #endif

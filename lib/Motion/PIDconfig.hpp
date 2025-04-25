@@ -8,8 +8,8 @@ typedef struct {
 } PIDConfig;
 
 /* 电机PID参数 */
-PIDConfig PID_POS = {0, 0, 0};   // 位置PID参数
-PIDConfig PID_RATE = {0, 0, 0};  // 速度PID参数
+PIDConfig POS = {0, 0, 0};   // 位置PID参数
+PIDConfig RATE = {0, 0, 0};  // 速度PID参数
 
 
 
