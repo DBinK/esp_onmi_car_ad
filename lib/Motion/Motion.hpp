@@ -24,16 +24,12 @@ public:
      * @brief 编码器集合类
      * @param const int pins[] , 总共8个编码器，每个编码器由两个引脚组成
      */
-    Encoders(const int pins[])
+    Encoders(const int pins[8])
         : encoder_lf(pins[0], pins[1]),
           encoder_rf(pins[2], pins[3]),
           encoder_lb(pins[4], pins[5]),
           encoder_rb(pins[6], pins[7])
     {
-        if (sizeof(pins) / sizeof(pins[0]) < 8)
-        {
-            throw std::invalid_argument("Pins array must have at least 8 elements");
-        }
         // 初始化 counts 和 speeds
         for (int i = 0; i < 4; ++i)
         {
@@ -93,16 +89,12 @@ protected:
 class Motors
 {
 public:
-    Motors(const int pins[])
+    Motors(const int pins[8])
         : motor_lf(pins[0], pins[1]),
           motor_rf(pins[2], pins[3]),
           motor_lb(pins[4], pins[5]),
           motor_rb(pins[6], pins[7])
     {
-        if (sizeof(pins) / sizeof(pins[0]) < 8)
-        {
-            throw std::invalid_argument("Pins array must have at least 8 elements");
-        }
         // 初始化 rates
         for (int i = 0; i < 4; ++i)
         {
@@ -110,7 +102,7 @@ public:
         }
     }
 
-    void set_motor_speed(int8_t rates_in[4])
+    void set_motor_speed(int16_t rates_in[4])
     {
         std::lock_guard<std::mutex> lock(mutex); // 线程安全
         motor_lf.setSpeed(rates_in[LF]);
@@ -134,7 +126,7 @@ protected:
     Motor motor_lb;
     Motor motor_rb;
 
-    int8_t rates[4];
+    int16_t rates[4];
 
     std::mutex mutex; // 用于线程安全
 };

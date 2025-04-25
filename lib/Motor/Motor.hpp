@@ -29,7 +29,7 @@ class Motor {
          * @brief 设置电机的转速
          * @param rate 
          */
-        void setSpeed(int8_t rate) {
+        void setSpeed(int16_t rate) {
             int8_t pwmValue = map(abs(rate), 0, 100, _THR_MIN, _THR_MAX);
             pwmValue = constrain(pwmValue, _THR_MIN, _THR_MAX);
     
@@ -47,7 +47,7 @@ class Motor {
 
         /**
          * @brief 设置电机的上下限
-         * @param rate 
+         * @param THR_MIN, THR_MAX 
          */
         void setSpeedLimit(uint16_t THR_MIN, uint16_t THR_MAX) {
             _THR_MIN = THR_MIN;

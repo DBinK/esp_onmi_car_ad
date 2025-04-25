@@ -13,19 +13,19 @@ Motors motors(motorPins);
 void setup() {
   Serial.begin(115200);              // 初始化串口
   encoders.setup();                  // 初始化编码器
-  encoders.set_encoder_filter(100);  // 设置编码器滤波器
-  motors.set_motor_limit(100, 255);  // 设置电机速度限制
+  encoders.set_encoder_filter(10);  // 设置编码器滤波器
+
+  // 设置电机速度
+  int16_t motorSpeeds[4] = {0, 222, 50, 80};
+  motors.set_motor_speed(motorSpeeds);
 }
 
 void loop() {
-  // 设置电机速度
-  int8_t motorSpeeds[4] = {0, 20, 50, 80};
-  motors.set_motor_speed(motorSpeeds);
 
   // 读取编码器计数
   int64_t encoderCounts[4];
   encoders.get_encoder_counts(encoderCounts);
-  Serial.print("Encoder Counts: LF=");
+  Serial.print("\nEncoder Counts: LF=");
   Serial.print(encoderCounts[LF]);
   Serial.print(", RF=");
   Serial.print(encoderCounts[RF]);
