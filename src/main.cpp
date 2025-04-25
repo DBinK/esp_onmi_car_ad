@@ -12,7 +12,7 @@ Motors motors(motorPins);
 
 void setup() {
   Serial.begin(115200);              // 初始化串口
-  encoders.setup();                  // 初始化编码器
+  encoders.setup(50);                  // 初始化编码器
   encoders.set_encoder_filter(10);  // 设置编码器滤波器
 
   // 设置电机速度
@@ -46,5 +46,5 @@ void loop() {
   Serial.print(", RB=");
   Serial.println(encoderSpeeds[RB]);
 
-  delay(1000); // 每秒读取一次
+  delay(100); // 每秒读取一次
 }
