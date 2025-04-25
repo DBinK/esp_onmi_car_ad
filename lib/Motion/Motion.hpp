@@ -123,17 +123,24 @@ protected:
 class Motion
 {
 public:
-    Motion(const int encoder_pins[8], const int motor_pins[8], PIDCtrlVal PIDCtrlVals[4])
+    Motion(const int encoder_pins[8], const int motor_pins[8],
+           PIDCtrlVal &posVals[4], PIDCtrlVal &rateVals[4])
         : encoders(encoder_pins),
           motors(motor_pins),
-          pidPos(PIDCtrlVals),
-          pidRate(PIDCtrlVals)
-          {
-            encoders.setup(50);               // 设置编码器频率
-            encoders.set_encoder_filter(10);  // 设置编码器滤波器
-            motors.set_motor_limit(0, 1023);  // 设置电机速度限制
-          }
+          pidPos(posVals),
+          pidRate(rateVals)
+    {
+        encoders.setup(50);              // 设置编码器频率
+        encoders.set_encoder_filter(10); // 设置编码器滤波器
+        motors.set_motor_limit(0, 1023); // 设置电机速度限制
+    }
 
+    void syncOutToTarget() {  // 位置环输出值 -> 速度环目标值
+        for (int i = 0; i < 4; i++) {
+            rateVals[i].tg = posVals[i].out;  
+        }
+    }
+    
     void pid_control_task(void *parameter) {
 
         static TickType_t xLastWakeTime = 0;
@@ -150,6 +157,7 @@ public:
             encoders.get_encoder_speeds(msRate);
             // pidPos.UpdateMeasure(msPos);
             pidRate.UpdateMeasure(msRate);
+            syncOutToTarget();
 
             // 计算PID控制
             // pidPos.Compute();
