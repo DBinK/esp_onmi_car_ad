@@ -9,6 +9,7 @@
 #include "HXCEncoder.hpp"
 #include "Motor.hpp"
 #include "PIDconfig.hpp"
+#include "PIDControllers.hpp"
 
 
 class Encoders
@@ -124,7 +125,8 @@ class Motion
 {
 public:
     Motion(const int encoder_pins[8], const int motor_pins[8],
-           PIDCtrlVal posVals[4], PIDCtrlVal rateVals[4])
+           PIDCtrlVal posVals[4], PIDCtrlVal rateVals[4], 
+           MeasureVal msPos, MeasureVal msRate)
         : encoders(encoder_pins),
           motors(motor_pins),
           pidPos(posVals),
@@ -173,8 +175,8 @@ public:
 protected:
     Encoders encoders;
     Motors motors;
-    PIDControllers pidPos;
-    PIDControllers pidRate;
+    PIDControllers pidPos, pidRate;
+    MeasureVal msPos, msRate;
 };
 
 #endif
