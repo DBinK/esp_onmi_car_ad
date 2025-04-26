@@ -32,15 +32,16 @@ class Motor {
         void setSpeed(int8_t rate) {
             Serial.println(rate);
             uint16_t pwmValue = map(abs(rate), 0, 100, _THR_MIN, _THR_MAX);
-            Serial.println(pwmValue);
+            // Serial.println(pwmValue);
             pwmValue = constrain(pwmValue, _THR_MIN, _THR_MAX);
-            Serial.println(pwmValue);
             if (rate > 0) {
                 analogWrite(_FW_PIN, pwmValue);
                 digitalWrite(_BW_PIN, LOW);
+                Serial.printf("+%ld", pwmValue);
             } else if (rate < 0) {
                 digitalWrite(_FW_PIN, LOW);
                 analogWrite(_BW_PIN, pwmValue);
+                Serial.printf("-%ld", pwmValue);
             } else {
                 digitalWrite(_FW_PIN, LOW);
                 digitalWrite(_BW_PIN, LOW);

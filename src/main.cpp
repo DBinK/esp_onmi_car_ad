@@ -11,7 +11,7 @@ Motor motor_lf(1, 2);
 
 //Define Variables we'll be connecting to
 float ms, out, tg;
-float Kp = 0.1, Ki = 0, Kd = 0;
+float Kp = 0.3, Ki = 0, Kd = 0;
 
 QuickPID lfPID(&ms, &out, &tg, Kp, Ki, Kd, QuickPID::Action::direct);
 
@@ -27,8 +27,9 @@ void setup() {
 
     lfPID.SetMode(1);
     // lfPID.SetTunings(Kp, Ki, Kd);
-    lfPID.SetOutputLimits(-100, 100);
-    tg = 1000;
+    lfPID.SetOutputLimits(-90, 90);
+    tg = -100;
+    // motor_lf.setSpeed(-80);
 };
 
 void loop() {
@@ -39,6 +40,7 @@ void loop() {
     ms = count;
     lfPID.Compute();
 
+    out = out+random(-2,2);
     motor_lf.setSpeed(out);
 
     Serial.printf("ms:%f, out:%f, tg:%f\n", ms, out, tg);
