@@ -123,9 +123,10 @@ protected:
     Motor motor_rb;
 };
 
+
 class Motion {
     public:
-        Motion(const int encoder_pins[8], const int motor_pins[8],
+        Motion(const uint8_t encoder_pins[8], const uint8_t motor_pins[8],
                PIDCtrlVal posVals[4], PIDCtrlVal rateVals[4],
                MeasureVal msPos, MeasureVal msRate)
             : encoders(encoder_pins),
@@ -133,29 +134,38 @@ class Motion {
               pidPos(posVals),
               pidRate(rateVals),
               msPos(msPos),
-              msRate(msRate) {
+              msRate(msRate), 
+              pidControlThread([]() {}) // 显式初始化线程成员变量为空任务
+        {
             encoders.setup(50);
             encoders.set_encoder_filter(10);
             motors.set_motor_limit(0, 1023);
-    
-            // 设置静态指针指向当前实例
-            motionInstance = this;
+
+            start_pid_control(); // 启动PID控制任务
         }
     
         void start_pid_control() {
-            xTaskCreate(
-                Motion::pid_control_task_static,
-                "pid_control_task",
-                4096,
-                NULL,
-                5,
-                NULL
-            );
+            pidControlThread = HXC::thread<void>([this]() { pid_control_task(); });
+            pidControlThread.start();
         }
     
-        static void pid_control_task_static(void *parameter) {
+        void syncOutToTarget() {
+            for (int i = 0; i < 4; i++) {
+                rateVals[i].tg = posVals[i].out;
+            }
+        }
+
+        void set_pos_target_value(uint8_t index, float pos_target_value) {
+            posVals[index].tg = pos_target_value;
+        }
+
+        void set_rate_target_value(uint8_t index, float rate_target_value) {
+            rateVals[index].tg = rate_target_value;
+        }
+    
+        void pid_control_task() {
             static TickType_t xLastWakeTime = 0;
-            Motion *motionInstance = Motion::getMotionInstance();
+            set_pos_target_value(LF, 0);
     
             while (1) {
                 if (xLastWakeTime == 0) {
@@ -163,27 +173,19 @@ class Motion {
                 }
                 vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(10));
     
-                if (motionInstance) {
-                    motionInstance->encoders.get_encoder_counts(motionInstance->msPos);
-                    motionInstance->encoders.get_encoder_speeds(motionInstance->msRate);
-                    motionInstance->pidPos.UpdateMeasure(motionInstance->msPos);
-                    motionInstance->pidRate.UpdateMeasure(motionInstance->msRate);
+                encoders.get_encoder_counts(msPos);
+                encoders.get_encoder_speeds(msRate);
+                pidPos.UpdateMeasure(msPos);
+                pidRate.UpdateMeasure(msRate);
     
-                    motionInstance->pidPos.Compute();
-                    motionInstance->syncOutToTarget();
-                    motionInstance->pidRate.Compute();
+                pidPos.Compute();
+                syncOutToTarget();
+                pidRate.Compute();
     
-                    motionInstance->motors.set_motor_speed_lf(motionInstance->posVals[LF].out);
-                    // motionInstance->motors.set_motor_speed_rf(motionInstance->rateVals[RF].out);
-                    // motionInstance->motors.set_motor_speed_lb(motionInstance->rateVals[LB].out);
-                    // motionInstance->motors.set_motor_speed_rb(motionInstance->rateVals[RB].out);
-                }
-            }
-        }
-    
-        void syncOutToTarget() {
-            for (int i = 0; i < 4; i++) {
-                rateVals[i].tg = posVals[i].out;
+                motors.set_motor_speed_lf(posVals[LF].out);
+                // motors.set_motor_speed_rf(rateRF.out);
+                // motors.set_motor_speed_lb(rateLB.out);
+                // motors.set_motor_speed_rb(rateRB.out);
             }
         }
     
@@ -194,14 +196,8 @@ class Motion {
         MeasureVal msPos, msRate;
         PIDCtrlVal posVals[4], rateVals[4];
     
-        static Motion* motionInstance;
-    
-        static Motion* getMotionInstance() {
-            return motionInstance;
-        }
+        HXC::thread<void> pidControlThread; // 添加线程成员变量
     };
     
-    // 初始化静态成员变量
-    Motion* Motion::motionInstance = nullptr;
-    
-    #endif
+
+#endif

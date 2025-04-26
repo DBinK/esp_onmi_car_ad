@@ -11,7 +11,7 @@ typedef struct {
 } PIDConfig;
 
 /* 电机PID参数 */
-PIDConfig POS = {0, 0, 0};   // 位置 PID 参数
+PIDConfig POS = {0.1, 0, 0};   // 位置 PID 参数
 PIDConfig RATE = {0, 0, 0};  // 速度 PID 参数
 
 
@@ -28,7 +28,7 @@ PIDCtrlVal rateLF, rateRF, rateRB, rateLB;
 // PIDCtrlVal posVals[4] = {posLF, posRF, posRB, posLB};
 // PIDCtrlVal rateVals[4] = {rateLF, rateRF, rateRB, rateLB};
 
-// 显式构造数组元素
+// 构造数组元素
 PIDCtrlVal posVals[4] = {
     {posLF.tg, posLF.ms, posLF.out},
     {posRF.tg, posRF.ms, posRF.out},
@@ -53,3 +53,8 @@ typedef struct {  // 编码器测量值结构体
 
 MeasureVal msPos;   // 实际位置 测量值
 MeasureVal msRate;  // 实际速度 测量值
+
+
+// 定义编码器和电机的引脚
+const uint8_t encoder_pins[8] = {4, 6, 39, 40, 21, 34, 12, 11}; // 根据实际情况修改引脚
+const uint8_t motor_pins[8] = {1, 2, 14, 13, 38, 36, 8, 10}; // 根据实际情况修改引脚
