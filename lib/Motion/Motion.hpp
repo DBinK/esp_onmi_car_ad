@@ -6,6 +6,8 @@
 #include <Arduino.h>
 #include <QuickPID.h>
 
+#include "HXCthread.hpp"
+
 #include "HXCEncoder.hpp"
 #include "Motor.hpp"
 #include "PIDconfig.hpp"
@@ -121,62 +123,85 @@ protected:
     Motor motor_rb;
 };
 
-class Motion
-{
-public:
-    Motion(const int encoder_pins[8], const int motor_pins[8],
-           PIDCtrlVal posVals[4], PIDCtrlVal rateVals[4], 
-           MeasureVal msPos, MeasureVal msRate)
-        : encoders(encoder_pins),
-          motors(motor_pins),
-          pidPos(posVals),
-          pidRate(rateVals)
-    {
-        encoders.setup(50);              // 设置编码器频率
-        encoders.set_encoder_filter(10); // 设置编码器滤波器
-        motors.set_motor_limit(0, 1023); // 设置电机速度限制
-    }
-
-    void syncOutToTarget() {  // 位置环输出值 -> 速度环目标值
-        for (int i = 0; i < 4; i++) {
-            rateVals[i].tg = posVals[i].out;  
-        }
-    }
+class Motion {
+    public:
+        Motion(const int encoder_pins[8], const int motor_pins[8],
+               PIDCtrlVal posVals[4], PIDCtrlVal rateVals[4],
+               MeasureVal msPos, MeasureVal msRate)
+            : encoders(encoder_pins),
+              motors(motor_pins),
+              pidPos(posVals),
+              pidRate(rateVals),
+              msPos(msPos),
+              msRate(msRate) {
+            encoders.setup(50);
+            encoders.set_encoder_filter(10);
+            motors.set_motor_limit(0, 1023);
     
-    void pid_control_task(void *parameter) {
-
-        static TickType_t xLastWakeTime = 0;
-
-        while (1) {
-            // 延时周期设置
-            if (xLastWakeTime == 0) {  // 修正 vTaskDelayUntil 的使用
-                xLastWakeTime = xTaskGetTickCount();
-            }
-            vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(10)); // 10ms
-
-            // 更新编码器数据
-            // encoders.get_encoder_counts(msPos)
-            encoders.get_encoder_speeds(msRate);
-            // pidPos.UpdateMeasure(msPos);
-            pidRate.UpdateMeasure(msRate);
-            syncOutToTarget();
-
-            // 计算PID控制
-            // pidPos.Compute();
-            pidRate.Compute();
-
-            motors.set_motor_speed_lf(rateLF.out);
-            motors.set_motor_speed_rf(rateRF.out);
-            motors.set_motor_speed_lb(rateLB.out);
-            motors.set_motor_speed_rb(rateRB.out);
+            // 设置静态指针指向当前实例
+            motionInstance = this;
         }
-    }
-
-protected:
-    Encoders encoders;
-    Motors motors;
-    PIDControllers pidPos, pidRate;
-    MeasureVal msPos, msRate;
-};
-
-#endif
+    
+        void start_pid_control() {
+            xTaskCreate(
+                Motion::pid_control_task_static,
+                "pid_control_task",
+                4096,
+                NULL,
+                5,
+                NULL
+            );
+        }
+    
+        static void pid_control_task_static(void *parameter) {
+            static TickType_t xLastWakeTime = 0;
+            Motion *motionInstance = Motion::getMotionInstance();
+    
+            while (1) {
+                if (xLastWakeTime == 0) {
+                    xLastWakeTime = xTaskGetTickCount();
+                }
+                vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(10));
+    
+                if (motionInstance) {
+                    motionInstance->encoders.get_encoder_counts(motionInstance->msPos);
+                    motionInstance->encoders.get_encoder_speeds(motionInstance->msRate);
+                    motionInstance->pidPos.UpdateMeasure(motionInstance->msPos);
+                    motionInstance->pidRate.UpdateMeasure(motionInstance->msRate);
+    
+                    motionInstance->pidPos.Compute();
+                    motionInstance->syncOutToTarget();
+                    motionInstance->pidRate.Compute();
+    
+                    motionInstance->motors.set_motor_speed_lf(motionInstance->posVals[LF].out);
+                    // motionInstance->motors.set_motor_speed_rf(motionInstance->rateVals[RF].out);
+                    // motionInstance->motors.set_motor_speed_lb(motionInstance->rateVals[LB].out);
+                    // motionInstance->motors.set_motor_speed_rb(motionInstance->rateVals[RB].out);
+                }
+            }
+        }
+    
+        void syncOutToTarget() {
+            for (int i = 0; i < 4; i++) {
+                rateVals[i].tg = posVals[i].out;
+            }
+        }
+    
+    protected:
+        Encoders encoders;
+        Motors motors;
+        PIDControllers pidPos, pidRate;
+        MeasureVal msPos, msRate;
+        PIDCtrlVal posVals[4], rateVals[4];
+    
+        static Motion* motionInstance;
+    
+        static Motion* getMotionInstance() {
+            return motionInstance;
+        }
+    };
+    
+    // 初始化静态成员变量
+    Motion* Motion::motionInstance = nullptr;
+    
+    #endif
