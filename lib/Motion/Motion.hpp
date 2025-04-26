@@ -95,6 +95,14 @@ public:
         motor_rb.setSpeedLimit(THR_MIN, THR_MAX);
     }
 
+    void set_motor_speed(int16_t rate_in[4])
+    {
+        motor_lf.setSpeed(rate_in[LF]);
+        motor_rf.setSpeed(rate_in[RF]);
+        motor_rb.setSpeed(rate_in[RB]);
+        motor_lb.setSpeed(rate_in[LB]);
+    }
+
     void set_motor_speed_lf(int16_t rate_in)
     {
         motor_lf.setSpeed(rate_in);
@@ -124,80 +132,80 @@ protected:
 };
 
 
-class Motion {
-    public:
-        Motion(const uint8_t encoder_pins[8], const uint8_t motor_pins[8],
-               PIDCtrlVal posVals[4], PIDCtrlVal rateVals[4],
-               MeasureVal msPos, MeasureVal msRate)
-            : encoders(encoder_pins),
-              motors(motor_pins),
-              pidPos(posVals),
-              pidRate(rateVals),
-              msPos(msPos),
-              msRate(msRate), 
-              pidControlThread([]() {}) // 显式初始化线程成员变量为空任务
-        {
-            encoders.setup(50);
-            encoders.set_encoder_filter(10);
-            motors.set_motor_limit(0, 1023);
+// class Motion {
+//     public:
+//         Motion(const uint8_t encoder_pins[8], const uint8_t motor_pins[8],
+//                PIDCtrlVal posVals[4], PIDCtrlVal rateVals[4],
+//                MeasureVal msPos, MeasureVal msRate)
+//             : encoders(encoder_pins),
+//               motors(motor_pins),
+//               pidPos(posVals),
+//               pidRate(rateVals),
+//               msPos(msPos),
+//               msRate(msRate), 
+//               pidControlThread([]() {}) // 显式初始化线程成员变量为空任务
+//         {
+//             encoders.setup(50);
+//             encoders.set_encoder_filter(10);
+//             motors.set_motor_limit(0, 1023);
 
-            start_pid_control(); // 启动PID控制任务
-        }
+//             start_pid_control(); // 启动PID控制任务
+//         }
     
-        void start_pid_control() {
-            pidControlThread = HXC::thread<void>([this]() { pid_control_task(); });
-            pidControlThread.start();
-        }
+//         void start_pid_control() {
+//             pidControlThread = HXC::thread<void>([this]() { pid_control_task(); });
+//             pidControlThread.start();
+//         }
     
-        void syncOutToTarget() {
-            for (int i = 0; i < 4; i++) {
-                rateVals[i].tg = posVals[i].out;
-            }
-        }
+//         void syncOutToTarget() {
+//             for (int i = 0; i < 4; i++) {
+//                 rateVals[i].tg = posVals[i].out;
+//             }
+//         }
 
-        void set_pos_target_value(uint8_t index, float pos_target_value) {
-            posVals[index].tg = pos_target_value;
-        }
+//         void set_pos_target_value(uint8_t index, float pos_target_value) {
+//             posVals[index].tg = pos_target_value;
+//         }
 
-        void set_rate_target_value(uint8_t index, float rate_target_value) {
-            rateVals[index].tg = rate_target_value;
-        }
+//         void set_rate_target_value(uint8_t index, float rate_target_value) {
+//             rateVals[index].tg = rate_target_value;
+//         }
     
-        void pid_control_task() {
-            static TickType_t xLastWakeTime = 0;
-            set_pos_target_value(LF, 0);
+//         void pid_control_task() {
+//             static TickType_t xLastWakeTime = 0;
+//             set_pos_target_value(LF, 0);
     
-            while (1) {
-                if (xLastWakeTime == 0) {
-                    xLastWakeTime = xTaskGetTickCount();
-                }
-                vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(10));
+//             while (1) {
+//                 if (xLastWakeTime == 0) {
+//                     xLastWakeTime = xTaskGetTickCount();
+//                 }
+//                 vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(10));
     
-                encoders.get_encoder_counts(msPos);
-                encoders.get_encoder_speeds(msRate);
-                pidPos.UpdateMeasure(msPos);
-                pidRate.UpdateMeasure(msRate);
+//                 encoders.get_encoder_counts(msPos);
+//                 encoders.get_encoder_speeds(msRate);
+//                 pidPos.UpdateMeasure(msPos);
+//                 pidRate.UpdateMeasure(msRate);
     
-                pidPos.Compute();
-                syncOutToTarget();
-                pidRate.Compute();
+//                 pidPos.Compute();
+//                 syncOutToTarget();
+//                 pidRate.Compute();
     
-                motors.set_motor_speed_lf(posVals[LF].out);
-                // motors.set_motor_speed_rf(rateRF.out);
-                // motors.set_motor_speed_lb(rateLB.out);
-                // motors.set_motor_speed_rb(rateRB.out);
-            }
-        }
+//                 motors.set_motor_speed_lf(posVals[LF].out);
+//                 // motors.set_motor_speed_rf(rateRF.out);
+//                 // motors.set_motor_speed_lb(rateLB.out);
+//                 // motors.set_motor_speed_rb(rateRB.out);
+//             }
+//         }
     
-    protected:
-        Encoders encoders;
-        Motors motors;
-        PIDControllers pidPos, pidRate;
-        MeasureVal msPos, msRate;
-        PIDCtrlVal posVals[4], rateVals[4];
+//     protected:
+//         Encoders encoders;
+//         Motors motors;
+//         PIDControllers pidPos, pidRate;
+//         MeasureVal msPos, msRate;
+//         PIDCtrlVal posVals[4], rateVals[4];
     
-        HXC::thread<void> pidControlThread; // 添加线程成员变量
-    };
+//         HXC::thread<void> pidControlThread; // 添加线程成员变量
+//     };
     
 
 #endif

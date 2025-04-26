@@ -1,50 +1,48 @@
 
 #include <Arduino.h>
-#include "Motion.hpp"
 
-// 定义引脚
-const int encoderPins[] = {4, 6, 39, 40, 21, 34, 12, 11}; // 编码器引脚
-const int motorPins[]   = {1, 2, 14, 13, 38, 36, 8, 10};  // 电机引脚
+#include <QuickPID.h>
 
-// 创建Encoders和Motors对象
-Encoders encoders(encoderPins);
-Motors motors(motorPins);
+#include "Motor.hpp"
+#include "HXCEncoder.hpp"
+
+HXC::Encoder encoder_lf(4, 6);
+Motor motor_lf(1, 2);
+
+//Define Variables we'll be connecting to
+float ms, out, tg;
+float Kp = 0.1, Ki = 0, Kd = 0;
+
+QuickPID lfPID(&ms, &out, &tg, Kp, Ki, Kd, QuickPID::Action::direct);
 
 void setup() {
-  Serial.begin(115200);              // 初始化串口
-  encoders.setup(50);                  // 初始化编码器
-  encoders.set_encoder_filter(10);  // 设置编码器滤波器
+    Serial.begin(115200);
+    Serial.printf("Start!\n");    
+    
+    encoder_lf.set_filter(100); // 设置脉冲去抖动滤波器的时间常数,单位纳秒
+    encoder_lf.setup(50);       // 初始化编码器并设置编码器采样频率,单位Hz 
 
-  // 设置电机速度
-  int16_t motorSpeeds[4] = {0, 20, 50, 80};
-  motors.set_motor_speed(motorSpeeds);
-}
+    motor_lf.setSpeedLimit(0, 1023);
+    motor_lf.setSpeed(0);
+
+    lfPID.SetMode(1);
+    // lfPID.SetTunings(Kp, Ki, Kd);
+    lfPID.SetOutputLimits(-100, 100);
+    tg = 1000;
+};
 
 void loop() {
 
-  // 读取编码器计数
-  int64_t encoderCounts[4];
-  encoders.get_encoder_counts(encoderCounts);
-  Serial.print("\nEncoder Counts: LF=");
-  Serial.print(encoderCounts[LF]);
-  Serial.print(", RF=");
-  Serial.print(encoderCounts[RF]);
-  Serial.print(", LB=");
-  Serial.print(encoderCounts[LB]);
-  Serial.print(", RB=");
-  Serial.println(encoderCounts[RB]);
+    int64_t count = encoder_lf.get_count();
+    float speed = encoder_lf.get_speed();
 
-  // 读取编码器速度
-  int32_t encoderSpeeds[4];
-  encoders.get_encoder_speeds(encoderSpeeds);
-  Serial.print("Encoder Speeds: LF=");
-  Serial.print(encoderSpeeds[LF]);
-  Serial.print(", RF=");
-  Serial.print(encoderSpeeds[RF]);
-  Serial.print(", LB=");
-  Serial.print(encoderSpeeds[LB]);
-  Serial.print(", RB=");
-  Serial.println(encoderSpeeds[RB]);
+    ms = count;
+    lfPID.Compute();
 
-  delay(100); // 每秒读取一次
-}
+    motor_lf.setSpeed(out);
+
+    Serial.printf("ms:%f, out:%f, tg:%f\n", ms, out, tg);
+    // Serial.printf("count:%ld, speed:%f\n",count,speed);
+
+    delay(100);
+};
