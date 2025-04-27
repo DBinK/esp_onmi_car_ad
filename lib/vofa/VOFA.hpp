@@ -33,7 +33,7 @@ public:
 
     bool UpdatePidParams(float &kp, float &ki, float &kd, 
                         float &kp2, float &ki2, float &kd2, 
-                        float &setpoint) {
+                        float &pos_tg, float &rate_tg) {
         int startIndex = 0;
         int endIndex = 0;
 
@@ -86,8 +86,11 @@ public:
             } else if (key == "rate_kd") {
                 kd2 = value;
                 return true;
-            } else if (key == "setpoint") {
-                setpoint = value;
+            } else if (key == "pos_tg") {
+                pos_tg = value;
+                return true;
+            } else if (key == "rate_tg") {
+                rate_tg = value;
                 return true;
             }
         }

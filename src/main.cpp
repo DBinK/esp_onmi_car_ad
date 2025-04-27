@@ -11,11 +11,11 @@
 HXC::Encoder encoder_lf(4, 6);
 Motor motor_lf(1, 2, 0, 1, 1000);
 
-PIDConfig POS = {0.196,  // Kp
-                 0.229,  // Ki
+PIDConfig POS = {3.60,  // Kp
+                 0.0,  // Ki
                  0.0};   // Kd
 
-PIDConfig RATE = {0.19,  // Kp  
+PIDConfig RATE = {0.16,  // Kp  
                   0.19,  // Ki
                   0.0};  // Kd
 
@@ -76,7 +76,7 @@ void loop() {
       rateLF.ms, rateLF.out, rateLF.tg, posLF.ms, posLF.out, posLF.tg);
 
     // 更新 PID 参数
-    if (vofa.UpdatePidParams(POS.P, POS.I, POS.D, RATE.P, RATE.I, RATE.D, posLF.tg))
+    if (vofa.UpdatePidParams(POS.P, POS.I, POS.D, RATE.P, RATE.I, RATE.D, posLF.tg, rateLF.tg))
     {
       pidRateLF.SetTunings(RATE.P, RATE.I, RATE.D);
       pidPosLF.SetTunings(POS.P, POS.I, POS.D);
