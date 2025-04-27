@@ -17,9 +17,9 @@ typedef struct {
 
 /* 预定义电机PID 目标值、测量值、输出值 结构体 */
 typedef struct {  
-    float tg  = 0;  // target
-    float ms  = 0;  // measure
-    float out = 0;  // output
+    float tg;  // target
+    float ms;  // measure
+    float out;   // output
 } PIDCtrlVal; 
 
 // PIDCtrlVal posLF, posRF, posRB, posLB;
@@ -46,8 +46,8 @@ typedef struct {
 
 typedef struct {  // 编码器测量值结构体
     int64_t LF = 0;
-    int64_t RF = 0;
     int64_t LB = 0;
+    int64_t RF = 0;
     int64_t RB = 0;
 } MeasureVal;    
 

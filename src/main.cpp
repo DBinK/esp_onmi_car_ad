@@ -6,21 +6,33 @@
 #include "Motor.hpp"
 #include "HXCEncoder.hpp"
 #include "vofa.hpp"
+#include "config.hpp"
 
 HXC::Encoder encoder_lf(4, 6);
 Motor motor_lf(1, 2, 0, 1, 1000);
 
-//Define Variables we'll be connecting to
-float ms, out, tg;
-float Kp = 0.19, Ki = 0.19, Kd = 0.0;
+PIDConfig POS = {0.196,  // Kp
+                 0.229,  // Ki
+                 0.0};   // Kd
 
-QuickPID lfPID(&ms, &out, &tg, Kp, Ki, Kd, QuickPID::Action::direct);
-uint16_t i = 0;
-int8_t reverse = 1;
+PIDConfig RATE = {0.19,  // Kp  
+                  0.19,  // Ki
+                  0.0};  // Kd
+
+PIDCtrlVal rateLF, rateRF, rateRB, rateLB;
+PIDCtrlVal posLF, posRF, posRB, posLB;
+
+
+QuickPID pidRateLF(&rateLF.ms, &rateLF.out, &rateLF.tg,
+                    RATE.P, RATE.I, RATE.D,
+                    QuickPID::Action::direct);
+
+QuickPID pidPosLF(&posLF.ms, &posLF.out, &posLF.tg,
+                  POS.P, POS.I, POS.D,
+                  QuickPID::Action::direct);
 
 VOFA vofa;   // 串口增强类, 用于接收 vofa+ 调试 PID 参数
 
-float Kp2 = 0.2, Ki2 = 0.08701, Kd2 = 0.000;
 
 void setup() {
     Serial.begin(115200);
@@ -33,9 +45,14 @@ void setup() {
     motor_lf.setSpeedLimit(0, 1023);
     motor_lf.setSpeed(0);
 
-    lfPID.SetMode(1);
-    lfPID.SetOutputLimits(-950, 950);
-    tg = 1;
+    pidRateLF.SetMode(1);
+    pidRateLF.SetOutputLimits(-950, 950);
+
+    pidPosLF.SetMode(1);
+    pidPosLF.SetOutputLimits(-9500, 9500);
+
+    rateLF.tg = 0;
+    posLF.tg = 0;
 };
 
 void loop() {
@@ -45,33 +62,24 @@ void loop() {
     int64_t count = encoder_lf.get_count();
     float speed = encoder_lf.get_speed();
 
-    // ms = count;
-    ms = speed;
-    lfPID.Compute();
+    posLF.ms = count;
+    rateLF.ms = speed;
+    
+    pidPosLF.Compute();
 
-    motor_lf.setSpeed(out);
+    rateLF.tg  = posLF.out;  // 让位置环的输出作为速度环的输入
+    pidRateLF.Compute();
 
-    // Serial.printf("ms:%f, out:%f, tg:%f\n", ms, out, tg);
-    // Serial.printf("count:%ld, speed:%f\n",count,speed);
+    motor_lf.setSpeed(rateLF.out);
 
-    // i++;
-    // if (i > 400) {
-    //     tg += 3000 * reverse;
-    //     i = 0;
-    //     // tg = -tg;
-    //     // lfPID.Reset();
-
-    //     if (tg > 12000 || tg < 3000){
-    //         reverse = -reverse;
-    //     }
-    // }
-
-    Serial.printf("%f,%f,%f,%d\n", ms, out, tg, i);
+    Serial.printf("%f,%f,%f,%f,%f,%f\n", 
+      rateLF.ms, rateLF.out, rateLF.tg, posLF.ms, posLF.out, posLF.tg);
 
     // 更新 PID 参数
-    if (vofa.UpdatePidParams(Kp, Ki, Kd, Kp2, Ki2, Kd2, tg))
+    if (vofa.UpdatePidParams(POS.P, POS.I, POS.D, RATE.P, RATE.I, RATE.D, posLF.tg))
     {
-      lfPID.SetTunings(Kp, Ki, Kd);
+      pidRateLF.SetTunings(RATE.P, RATE.I, RATE.D);
+      pidPosLF.SetTunings(POS.P, POS.I, POS.D);
 
       Serial.println("PID参数更新成功");
     }
