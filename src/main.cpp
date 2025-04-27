@@ -5,7 +5,7 @@
 
 #include "Motor.hpp"
 #include "HXCEncoder.hpp"
-#include "uart.h"
+#include "vofa.hpp"
 
 HXC::Encoder encoder_lf(4, 6);
 Motor motor_lf(1, 2, 0, 1, 1000);
@@ -18,14 +18,14 @@ QuickPID lfPID(&ms, &out, &tg, Kp, Ki, Kd, QuickPID::Action::direct);
 uint16_t i = 0;
 int8_t reverse = 1;
 
-UART pid_config;   // 串口增强类, 用于接收 vofa+ 调试 PID 参数
+VOFA vofa;   // 串口增强类, 用于接收 vofa+ 调试 PID 参数
 
 float Kp2 = 0.2, Ki2 = 0.08701, Kd2 = 0.000;
 
 void setup() {
     Serial.begin(115200);
     Serial.printf("Start!\n");    
-    pid_config.begin(Serial);  // 初始化串口增强类
+    vofa.begin(Serial);  // 初始化串口增强类
     
     encoder_lf.set_filter(100); // 设置脉冲去抖动滤波器的时间常数,单位纳秒
     encoder_lf.setup(50);       // 初始化编码器并设置编码器采样频率,单位Hz 
@@ -34,7 +34,7 @@ void setup() {
     motor_lf.setSpeed(0);
 
     lfPID.SetMode(1);
-    lfPID.SetOutputLimits(-900, 900);
+    lfPID.SetOutputLimits(-950, 950);
     tg = 1;
 };
 
@@ -54,22 +54,22 @@ void loop() {
     // Serial.printf("ms:%f, out:%f, tg:%f\n", ms, out, tg);
     // Serial.printf("count:%ld, speed:%f\n",count,speed);
 
-    i++;
-    if (i > 400) {
-        tg += 3000 * reverse;
-        i = 0;
-        // tg = -tg;
-        // lfPID.Reset();
+    // i++;
+    // if (i > 400) {
+    //     tg += 3000 * reverse;
+    //     i = 0;
+    //     // tg = -tg;
+    //     // lfPID.Reset();
 
-        if (tg > 12000 || tg < 3000){
-            reverse = -reverse;
-        }
-    }
+    //     if (tg > 12000 || tg < 3000){
+    //         reverse = -reverse;
+    //     }
+    // }
 
     Serial.printf("%f,%f,%f,%d\n", ms, out, tg, i);
 
     // 更新 PID 参数
-    if (pid_config.UpdatePidParams(Kp, Ki, Kd, Kp2, Ki2, Kd2))
+    if (vofa.UpdatePidParams(Kp, Ki, Kd, Kp2, Ki2, Kd2, tg))
     {
       lfPID.SetTunings(Kp, Ki, Kd);
 
