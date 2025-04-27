@@ -1,6 +1,6 @@
 #include "Motor.hpp"
 
-Motor motor(1, 2);
+Motor motor(1, 2, 0, 1, 1000);
 
 void setup() {
     //调试串口初始化
