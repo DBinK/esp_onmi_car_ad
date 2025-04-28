@@ -15,16 +15,16 @@ typedef struct {
     uint8_t BW_PIN;
     uint8_t FW_CHANNEL;
     uint8_t BW_CHANNEL;
-    uint16_t freq = 10000;
-    uint16_t THR_MIN = 0;
-    uint16_t THR_MAX = 1023;
+    uint16_t freq; // = 10000;
+    uint16_t THR_MIN; // = 0;
+    uint16_t THR_MAX; // = 1023;
 } MotorConfig;
 
 typedef struct { 
     uint8_t PINA;
     uint8_t PINB;
-    uint16_t frc = 50;
-    uint16_t filter_ns = 10;
+    uint16_t frc; // = 50;
+    uint16_t filter_ns; // = 10;
 } EncoderConfig;
 
 /* 预定义电机PID 目标值、测量值、输出值 结构体 */
