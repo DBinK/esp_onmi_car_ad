@@ -16,16 +16,17 @@ public:
         EncoderConfig _encoderCfg, MotorConfig _motorCfg, 
         uint32_t SampleTimeUs):
 
-        // 全局变量
+        // PID配置和中间变量
         POS(_POS), RATE(_RATE),
         posVal(_posVal), rateVal(_rateVal),
         encoderCfg(_encoderCfg), motorCfg(_motorCfg),
 
         // 电机用对象
         encoder(encoderCfg.PINA, encoderCfg.PINB),
-        motor(motorCfg.FW_PIN, motorCfg.BW_PIN,
-                motorCfg.FW_CHANNEL, motorCfg.BW_CHANNEL,
-                motorCfg.freq, motorCfg.THR_MIN, motorCfg.THR_MAX),
+        // motor(motorCfg.FW_PIN, motorCfg.BW_PIN,
+        //         motorCfg.FW_CHANNEL, motorCfg.BW_CHANNEL,
+        //         motorCfg.freq, motorCfg.THR_MIN, motorCfg.THR_MAX),
+        motor(1, 2, 0, 1, 0, 1023),
 
         pidRate(&rateVal.ms, &rateVal.out, &rateVal.tg,
                 RATE.P, RATE.I, RATE.D,
@@ -44,11 +45,13 @@ public:
 
         pidRate.SetMode(1);
         pidRate.SetSampleTimeUs(SampleTimeUs);
-        pidRate.SetOutputLimits(-motorCfg.THR_MAX, motorCfg.THR_MAX);
+        // pidRate.SetOutputLimits(-motorCfg.THR_MAX, motorCfg.THR_MAX);
+        pidRate.SetOutputLimits(-950, 950);
 
         pidPos.SetMode(1);
         pidPos.SetSampleTimeUs(SampleTimeUs);
-        pidPos.SetOutputLimits(-motorCfg.THR_MAX*10, motorCfg.THR_MAX*10);
+        // pidPos.SetOutputLimits(-motorCfg.THR_MAX*10, motorCfg.THR_MAX*10);
+        pidPos.SetOutputLimits(-9500, 9500);
 
         rateVal.tg = 0;
         posVal.tg = 0;
@@ -66,26 +69,30 @@ public:
         if (mode == 0) {  // 位置环和速度环一起控制
             pidPos.Compute();   
             rateVal.tg = posVal.out; // 让位置环的输出作为速度环的输入
-            pidRate.Compute();
+            pidRate.Compute();   
             motor.setSpeed(posVal.out);
+            Serial.printf("位置环和速度环一起控制 %f, %f \n", posVal.out, rateVal.out);
         }
         else if (mode == 1) {  // 仅速度环控制
             pidRate.Compute();
             motor.setSpeed(rateVal.out);
+            Serial.printf("仅速度环控制\n");
         }
         else if (mode == 2) {  // 仅位置环控制
             pidPos.Compute();
             motor.setSpeed(posVal.out);
+            Serial.printf("仅位置环控制\n");
         }
         else {   // 关闭 PID 控制
             motor.setSpeed(0);
             pidRate.Reset();
             pidPos.Reset();
             // posVal.ms = 0;
+            encoder.reset_count();
         }
 
-        Serial.printf("ms %f, %f ; out %f, %f\n", 
-            posVal.ms, rateVal.ms, posVal.out, rateVal.out);
+        // Serial.printf("%f, %f, %f , %f, %f , %f \n", 
+        //     rateVal.ms, rateVal.out, rateVal.tg, posVal.ms, posVal.out, posVal.tg);
     } 
 
     void setPIDcfg(PIDConfig _POS, PIDConfig _RATE) {
@@ -124,6 +131,10 @@ public:
         encoder.reset_count();
         motor.setSpeed(0);
         Serial.println("PID reset");
+    }
+
+    void setMotorSpeedDirect(int16_t rate) {
+        motor.setSpeed(rate);
     }
     
 protected:

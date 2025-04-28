@@ -16,8 +16,8 @@ class Motor {
          * @param THR_MIN    速度最小PWM值
          * @param THR_MAX    速度最大PWM值
          */
-        Motor(uint8_t FW_PIN, uint8_t BW_PIN, 
-            uint8_t FW_CHANNEL, uint8_t BW_CHANNEL, uint16_t freq=10000,
+        Motor(uint16_t FW_PIN, uint16_t BW_PIN, 
+            uint16_t FW_CHANNEL, uint16_t BW_CHANNEL, uint16_t freq=10000,
             uint16_t THR_MIN = 0, uint16_t THR_MAX = 1023) {
             _FW_PIN = FW_PIN;
             _BW_PIN = BW_PIN;

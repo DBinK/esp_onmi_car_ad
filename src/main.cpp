@@ -57,16 +57,19 @@ void motor_control(void *parameter)
     vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(SampleTimeMS)); // 10ms
 
     // 检查 PID 参数更新
-    if (vofa.UpdatePidParams(POS.P, POS.I, POS.D, RATE.P, RATE.I, RATE.D, posLF.tg, rateLF.tg))
+    if (vofa.UpdatePidParams(POS.P, POS.I, POS.D, RATE.P, RATE.I, RATE.D, 
+                            motor_lf.posVal.tg, motor_lf.posVal.tg))
     {
       motor_lf.setPIDcfg(POS, RATE);
       Serial.printf("PID参数更新 pos: %f, %f, %f ; rate: %f, %f, %f \n", POS.P, POS.I, POS.D, RATE.P, RATE.I, RATE.D);
     }
 
     motor_lf.PIDCompute(0);
+    // motor_lf.setMotorSpeedDirect(rateLF.tg);
     
     Serial.printf("%f,%f,%f,%f,%f,%f\n",   // VOFA 串口输出
-                  rateLF.ms, rateLF.out, rateLF.tg, posLF.ms, posLF.out, posLF.tg);
+        motor_lf.rateVal.ms, motor_lf.rateVal.out, motor_lf.rateVal.tg, 
+        motor_lf.posVal.ms, motor_lf.posVal.out, motor_lf.posVal.tg);
 
   }
 };
