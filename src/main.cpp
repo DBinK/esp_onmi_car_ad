@@ -13,7 +13,7 @@ Motor motor_lf(1, 2, 0, 1, 1000);
 
 PIDConfig POS = {25.0, // Kp
                  0.0,  // Ki
-                 1.0}; // Kd
+                 0.60}; // Kd
 
 PIDConfig RATE = {0.10, // Kp
                   0.67, // Ki
