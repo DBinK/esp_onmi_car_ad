@@ -1,3 +1,6 @@
+#ifndef __CONFIG_HPP__
+#define __CONFIG_HPP__
+
 #include <Arduino.h>
 #include <QuickPID.h>
 
@@ -11,10 +14,10 @@ typedef struct {
 } PIDConfig;
 
 typedef struct {
-    uint8_t FW_PIN;
-    uint8_t BW_PIN;
-    uint8_t FW_CHANNEL;
-    uint8_t BW_CHANNEL;
+    uint16_t FW_PIN;
+    uint16_t BW_PIN;
+    uint16_t FW_CHANNEL;
+    uint16_t BW_CHANNEL;
     uint16_t freq; // = 10000;
     uint16_t THR_MIN; // = 0;
     uint16_t THR_MAX; // = 1023;
@@ -76,3 +79,6 @@ typedef struct {  // 多编码器测量值结构体
 
 // MeasureVal msPos;   // 实际位置 测量值
 // MeasureVal msRate;  // 实际速度 测量值
+
+
+#endif

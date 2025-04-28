@@ -1,3 +1,6 @@
+#ifndef __MOTOR_CONTROLLER_H__
+#define __MOTOR_CONTROLLER_H__
+
 #include <Arduino.h>
 #include <QuickPID.h>
 
@@ -36,7 +39,7 @@ public:
         encoder.setup(encoderCfg.frc);
         encoder.set_filter(encoderCfg.filter_ns);
 
-        motor.setSpeedLimit(motorCfg.THR_MIN, motorCfg.THR_MAX);
+        motor.setSpeedLimit(0, motorCfg.THR_MAX);
         motor.setSpeed(0);
 
         pidRate.SetMode(1);
@@ -45,7 +48,7 @@ public:
 
         pidPos.SetMode(1);
         pidPos.SetSampleTimeUs(SampleTimeUs);
-        pidPos.SetOutputLimits(-motorCfg.THR_MAX, motorCfg.THR_MAX);
+        pidPos.SetOutputLimits(-motorCfg.THR_MAX*10, motorCfg.THR_MAX*10);
 
         rateVal.tg = 0;
         posVal.tg = 0;
@@ -80,7 +83,10 @@ public:
             pidPos.Reset();
             // posVal.ms = 0;
         }
-    }
+
+        Serial.printf("ms %f, %f ; out %f, %f\n", 
+            posVal.ms, rateVal.ms, posVal.out, rateVal.out);
+    } 
 
     void setPIDcfg(PIDConfig _POS, PIDConfig _RATE) {
         pidPos.SetTunings(_POS.P, _POS.I, _POS.D);
@@ -126,3 +132,5 @@ protected:
 
     QuickPID pidRate, pidPos;
 };
+
+#endif
