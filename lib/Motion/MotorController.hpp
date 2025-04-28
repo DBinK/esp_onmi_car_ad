@@ -56,6 +56,69 @@ public:
     EncoderConfig encoderCfg;
     MotorConfig motorCfg;
 
+    void PIDCompute(uint8_t mode = -1) {
+        posVal.ms  = encoder.get_count();
+        rateVal.ms = encoder.get_speed();
+
+        if (mode == 0) {  // 位置环和速度环一起控制
+            pidPos.Compute();   
+            rateVal.tg = posVal.out; // 让位置环的输出作为速度环的输入
+            pidRate.Compute();
+            motor.setSpeed(posVal.out);
+        }
+        else if (mode == 1) {  // 仅速度环控制
+            pidRate.Compute();
+            motor.setSpeed(rateVal.out);
+        }
+        else if (mode == 2) {  // 仅位置环控制
+            pidPos.Compute();
+            motor.setSpeed(posVal.out);
+        }
+        else {   // 关闭 PID 控制
+            motor.setSpeed(0);
+            pidRate.Reset();
+            pidPos.Reset();
+            // posVal.ms = 0;
+        }
+    }
+
+    void setPIDcfg(PIDConfig _POS, PIDConfig _RATE) {
+        pidPos.SetTunings(_POS.P, _POS.I, _POS.D);
+        pidRate.SetTunings(_RATE.P, _RATE.I, _RATE.D);
+        pidRate.Reset();
+        pidPos.Reset();   
+        Serial.printf("PID参数更新 pos: %f, %f, %f ; rate: %f, %f, %f \n", POS.P, POS.I, POS.D, RATE.P, RATE.I, RATE.D);
+    }    
+    
+    void setSpeedLimit(uint16_t THR_MIN, uint16_t THR_MAX) {
+        motor.setSpeedLimit(THR_MIN, THR_MAX);
+    }
+
+    void setPostion(float _tg) {
+        posVal.tg = _tg;
+    }
+
+    void setRate(float _tg) {
+        rateVal.tg = _tg;
+    }
+
+    void getPostion(int64_t &Pos) {
+        Pos = encoder.get_count();
+    }
+
+    void getRate(float &Rate) {
+        Rate = encoder.get_speed();
+    }
+
+    void reset() {
+        pidRate.Reset();
+        pidPos.Reset();
+        posVal.ms = 0;
+        rateVal.ms = 0;
+        encoder.reset_count();
+        motor.setSpeed(0);
+        Serial.println("PID reset");
+    }
     
 protected:
     HXC::Encoder encoder;
