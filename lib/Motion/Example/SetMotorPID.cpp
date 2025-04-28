@@ -8,19 +8,25 @@
 #include "vofa.hpp"
 #include "config.hpp"
 
-HXC::Encoder encoder_lf(4, 6);
-Motor motor_lf(1, 2, 0, 1, 1000);
-
+// 全局变量
 PIDConfig POS = {25.0, // Kp
                  0.0,  // Ki
-                 0.60}; // Kd
+                 0.6}; // Kd
 
 PIDConfig RATE = {0.10, // Kp
                   0.67, // Ki
-                  0.001}; // Kd
+                  0.001};// Kd
 
 PIDCtrlVal rateLF, rateRF, rateRB, rateLB;
 PIDCtrlVal posLF, posRF, posRB, posLB;
+
+VOFA vofa; // 串口增强类, 用于接收 vofa+ 调试 PID 参数
+
+uint8_t SampleTimeMS = 10;  // PID 和 控制循环计算频率 
+
+// 电机用对象
+HXC::Encoder encoder_lf(4, 6);
+Motor motor_lf(1, 2, 0, 1, 1000);
 
 QuickPID pidRateLF(&rateLF.ms, &rateLF.out, &rateLF.tg,
                    RATE.P, RATE.I, RATE.D,
@@ -29,10 +35,6 @@ QuickPID pidRateLF(&rateLF.ms, &rateLF.out, &rateLF.tg,
 QuickPID pidPosLF(&posLF.ms, &posLF.out, &posLF.tg,
                   POS.P, POS.I, POS.D,
                   QuickPID::Action::direct);
-
-VOFA vofa; // 串口增强类, 用于接收 vofa+ 调试 PID 参数
-
-uint8_t SampleTimeMS = 10;  // PID 和 控制循环计算频率 
 
 
 void motor_control(void *parameter)
@@ -85,7 +87,7 @@ void motor_control(void *parameter)
       posLF.ms = 0;
       delay(1000);
     }
-      
+    
     // VOFA 串口输出
     Serial.printf("%f,%f,%f,%f,%f,%f\n",
                   rateLF.ms, rateLF.out, rateLF.tg, posLF.ms, posLF.out, posLF.tg);
