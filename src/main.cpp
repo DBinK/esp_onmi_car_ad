@@ -11,28 +11,28 @@
 #include "config.hpp"
 
 // 全局变量
-// PIDConfig POS = {25.0, // Kp
+// PIDConfig POS = {1.0, // Kp
 //                  0.0,  // Ki
-//                  0.6}; // Kd
+//                  0.0}; // Kd
 
 // PIDConfig RATE = {0.10, // Kp
-//                   0.67, // Ki
-//                   0.001};// Kd
+//                   2.0, // Ki
+//                   0.005};// Kd
 
 
-PIDConfig POS = {0.0, // Kp
+PIDConfig POS = {25.0, // Kp
                  0.0,  // Ki
-                 0.0}; // Kd
+                 0.6}; // Kd
 
-PIDConfig RATE = {0.0, // Kp
-                  0.0, // Ki
-                  0.0};// Kd
+PIDConfig RATE = {0.10, // Kp
+                  0.67, // Ki
+                  0.001};// Kd
 
 PIDCtrlVal rateLF, rateRF, rateRB, rateLB;
 PIDCtrlVal posLF, posRF, posRB, posLB;
 
 EncoderConfig encoderCfg = {4, 6, 50, 10};
-MotorConfig motorCfg = {1, 2, 0, 1, 10000, 0, 1023};
+MotorConfig motorCfg = {1, 2, 0, 1, 10000, 400, 1023};
 
 uint8_t SampleTimeMS = 10;  // PID 和 控制循环计算频率 
 
@@ -75,13 +75,10 @@ void motor_control(void *parameter)
       // Serial.printf("PID参数更新 pos: %f, %f, %f ; rate: %f, %f, %f \n", POS.P, POS.I, POS.D, RATE.P, RATE.I, RATE.D);
     }
 
-    motor_lf.PIDCompute(1);
+    motor_lf.PIDCompute();
     // motor_lf.setMotorSpeedDirect(motor_lf.posVal.tg);
     // motor_lf.setMotorSpeedDirect(500);
-    // motor_rf.setSpeed(motor_lf.rateVal.tg);
-    
-    // motor_rf.setSpeed(700);
-    
+
     Serial.printf("%f,%f,%f,%f,%f,%f\n",   // VOFA 串口输出
         motor_lf.rateVal.ms, motor_lf.rateVal.out, motor_lf.rateVal.tg, 
         motor_lf.posVal.ms, motor_lf.posVal.out, motor_lf.posVal.tg);
@@ -94,7 +91,7 @@ void setup()
   Serial.printf("Start!\n");
   vofa.begin(Serial); // 初始化串口增强类
 
-  xTaskCreate(motor_control, "motor_control", 4096, NULL, 1, NULL);
+  xTaskCreate(motor_control, "motor_control", 4096*2, NULL, 1, NULL);
   
   // motor_rf.setSpeed(700);
 };

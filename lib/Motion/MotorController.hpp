@@ -43,12 +43,12 @@ public:
         pidRate.SetMode(1);
         pidRate.SetSampleTimeUs(SampleTimeUs);
         // pidRate.SetOutputLimits(-motorCfg.THR_MAX, motorCfg.THR_MAX);
-        pidRate.SetOutputLimits(-950, 950);
+        pidRate.SetOutputLimits(-9500, 9500);
 
         pidPos.SetMode(1);
         pidPos.SetSampleTimeUs(SampleTimeUs);
         // pidPos.SetOutputLimits(-motorCfg.THR_MAX*10, motorCfg.THR_MAX*10);
-        pidPos.SetOutputLimits(-9500, 9500);
+        pidPos.SetOutputLimits(-15000,  15000);
 
         rateVal.tg = 0;
         posVal.tg = 0;
@@ -63,23 +63,23 @@ public:
     Motor motor;
     QuickPID pidRate, pidPos;
 
-    void PIDCompute(uint8_t mode = -1) {
+    void PIDCompute() {
         posVal.ms  = encoder.get_count();
         rateVal.ms = encoder.get_speed();
 
-        if (mode == 0) {  // 位置环和速度环一起控制
+        if (POS.P > 0 && RATE.P > 0) {  // 位置环和速度环一起控制
             pidPos.Compute();   
             rateVal.tg = posVal.out; // 让位置环的输出作为速度环的输入
             pidRate.Compute();   
-            motor.setSpeed(posVal.out);
+            motor.setSpeed(rateVal.out);
             Serial.printf("位置环和速度环一起控制 %f, %f \n", posVal.out, rateVal.out);
         }
-        else if (mode == 1) {  // 仅速度环控制
+        else if (RATE.P > 0 && POS.P == 0) {  // 仅速度环控制
             pidRate.Compute();
             motor.setSpeed(rateVal.out);
             Serial.printf("仅速度环控制\n");
         }
-        else if (mode == 2) {  // 仅位置环控制
+        else if (POS.P > 0 && RATE.P == 0) {  // 仅位置环控制
             pidPos.Compute();
             motor.setSpeed(posVal.out);
             Serial.printf("仅位置环控制\n");
