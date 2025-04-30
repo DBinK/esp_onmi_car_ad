@@ -15,16 +15,20 @@ PIDConfig POS = {25.0, // Kp
                  0.0,  // Ki
                  0.6}; // Kd
 
-PIDConfig RATE = {0.10, // Kp
-                  0.67, // Ki
+PIDConfig RATE = {0.10,  // Kp
+                  0.67,  // Ki
                   0.001};// Kd
-
-EncoderConfig encoderCfg = {4, 6, 50, 10};
-MotorConfig motorCfg = {1, 2, 0, 1, 10000, 0, 1023};
 
 uint8_t SampleTimeMS = 10;  // PID 和 控制循环计算频率 
 
-MotorController motor_lf(POS, RATE, encoderCfg, motorCfg, SampleTimeMS*1000);
+EncoderConfig encoder_lf_Cfg = {4, 6, 50, 10};
+EncoderConfig encoder_rf_Cfg = {39, 40, 50, 10};
+
+MotorConfig motor_lf_Cfg = {1, 2, 0, 1, 10000, 0, 1023};
+MotorConfig motor_rf_Cfg = {14, 13, 2, 3, 10000, 0, 1023};
+
+MotorController motor_lf(POS, RATE, encoder_lf_Cfg, motor_lf_Cfg, SampleTimeMS*1000);
+MotorController motor_rf(POS, RATE, encoder_rf_Cfg, motor_rf_Cfg, SampleTimeMS*1000);
 
 VOFA vofa; // 串口增强类, 用于接收 vofa+ 调试 PID 参数
 
@@ -45,10 +49,16 @@ void motor_control(void *parameter)
     if (vofa.UpdatePidParams(POS.P, POS.I, POS.D, RATE.P, RATE.I, RATE.D, 
                             motor_lf.posVal.tg, motor_lf.rateVal.tg))
     {
+      motor_rf.posVal.tg = motor_lf.posVal.tg;
+      motor_rf.posVal.tg = motor_lf.posVal.tg;
+
       motor_lf.setPIDcfg(POS, RATE);
+      motor_rf.setPIDcfg(POS, RATE);
     }
 
     motor_lf.PIDCompute();
+    // motor_rf.PIDCompute();
+    motor_rf.setMotorSpeedDirect(motor_lf.rateVal.out);
 
     Serial.printf("%f,%f,%f,%f,%f,%f\n",   // VOFA 串口输出
         motor_lf.rateVal.ms, motor_lf.rateVal.out, motor_lf.rateVal.tg, 

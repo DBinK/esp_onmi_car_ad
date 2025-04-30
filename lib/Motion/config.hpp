@@ -45,40 +45,9 @@ typedef struct {  // 多编码器测量值结构体
 } MeasureVal;    
 
 
-
-
 // 定义编码器和电机的引脚
 // const uint8_t encoder_pins[8] = {4, 6, 39, 40, 21, 34, 12, 11}; // 根据实际情况修改引脚
 // const uint8_t motor_pins[8] = {1, 2, 14, 13, 38, 36, 8, 10}; // 根据实际情况修改引脚
-
-
-/* 电机PID参数 */
-// PIDConfig POS = {0.1, 0, 0};   // 位置 PID 参数
-// PIDConfig RATE = {0, 0, 0};  // 速度 PID 参数
-
-// PIDCtrlVal posLF, posRF, posRB, posLB;
-// PIDCtrlVal rateLF, rateRF, rateRB, rateLB;
-
-// PIDCtrlVal posVals[4] = {posLF, posRF, posRB, posLB};
-// PIDCtrlVal rateVals[4] = {rateLF, rateRF, rateRB, rateLB};
-
-// // 构造数组元素
-// PIDCtrlVal posVals[4] = {
-//     {posLF.tg, posLF.ms, posLF.out},
-//     {posRF.tg, posRF.ms, posRF.out},
-//     {posRB.tg, posRB.ms, posRB.out},
-//     {posLB.tg, posLB.ms, posLB.out}
-// };
-
-// PIDCtrlVal rateVals[4] = {
-//     {rateLF.tg, rateLF.ms, rateLF.out},
-//     {rateRF.tg, rateRF.ms, rateRF.out},
-//     {rateRB.tg, rateRB.ms, rateRB.out},
-//     {rateLB.tg, rateLB.ms, rateLB.out}
-// };
-
-// MeasureVal msPos;   // 实际位置 测量值
-// MeasureVal msRate;  // 实际速度 测量值
 
 
 #endif
