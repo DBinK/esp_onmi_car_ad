@@ -26,7 +26,7 @@ uint8_t SampleTimeMS = 10;  // PID 和 控制循环计算频率
 
 // 电机用对象
 HXC::Encoder encoder_lf(4, 6);
-Motor motor_lf(1, 2, 0, 1, 1000);
+Motor motor_lf(1, 2, 0, 1, 10000);
 
 QuickPID pidRateLF(&rateLF.ms, &rateLF.out, &rateLF.tg,
                    RATE.P, RATE.I, RATE.D,

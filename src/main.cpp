@@ -11,29 +11,40 @@
 #include "config.hpp"
 
 // 全局变量
-PIDConfig POS = {25.0, // Kp
-                 0.0,  // Ki
-                 0.6}; // Kd
+// PIDConfig POS = {25.0, // Kp
+//                  0.0,  // Ki
+//                  0.6}; // Kd
 
-PIDConfig RATE = {0.10, // Kp
-                  0.67, // Ki
-                  0.001};// Kd
+// PIDConfig RATE = {0.10, // Kp
+//                   0.67, // Ki
+//                   0.001};// Kd
+
+
+PIDConfig POS = {0.0, // Kp
+                 0.0,  // Ki
+                 0.0}; // Kd
+
+PIDConfig RATE = {0.0, // Kp
+                  0.0, // Ki
+                  0.0};// Kd
 
 PIDCtrlVal rateLF, rateRF, rateRB, rateLB;
 PIDCtrlVal posLF, posRF, posRB, posLB;
 
 EncoderConfig encoderCfg = {4, 6, 50, 10};
-MotorConfig motorCfg = {1, 2, 0, 1, 0, 1023};
+MotorConfig motorCfg = {1, 2, 0, 1, 10000, 0, 1023};
 
 uint8_t SampleTimeMS = 10;  // PID 和 控制循环计算频率 
 
-MotorController motor_lf(POS, RATE, posLF, rateLF, encoderCfg, motorCfg, SampleTimeMS*1000);
+MotorController motor_lf(POS, RATE, encoderCfg, motorCfg, SampleTimeMS*1000);
 
 VOFA vofa; // 串口增强类, 用于接收 vofa+ 调试 PID 参数
 
+// Motor motor_rf(14, 13, 4, 5, 1000);
+
 // // 电机用对象
 // HXC::Encoder encoder_lf(4, 6);
-// Motor motor_lf(1, 2, 0, 1, 1000);
+// Motor motor_lf(1, 2, 0, 1);
 
 // QuickPID pidRateLF(&rateLF.ms, &rateLF.out, &rateLF.tg,
 //                    RATE.P, RATE.I, RATE.D,
@@ -58,19 +69,22 @@ void motor_control(void *parameter)
 
     // 检查 PID 参数更新
     if (vofa.UpdatePidParams(POS.P, POS.I, POS.D, RATE.P, RATE.I, RATE.D, 
-                            motor_lf.posVal.tg, motor_lf.posVal.tg))
+                            motor_lf.posVal.tg, motor_lf.rateVal.tg))
     {
       motor_lf.setPIDcfg(POS, RATE);
-      Serial.printf("PID参数更新 pos: %f, %f, %f ; rate: %f, %f, %f \n", POS.P, POS.I, POS.D, RATE.P, RATE.I, RATE.D);
+      // Serial.printf("PID参数更新 pos: %f, %f, %f ; rate: %f, %f, %f \n", POS.P, POS.I, POS.D, RATE.P, RATE.I, RATE.D);
     }
 
-    motor_lf.PIDCompute(0);
-    // motor_lf.setMotorSpeedDirect(rateLF.tg);
+    motor_lf.PIDCompute(1);
+    // motor_lf.setMotorSpeedDirect(motor_lf.posVal.tg);
+    // motor_lf.setMotorSpeedDirect(500);
+    // motor_rf.setSpeed(motor_lf.rateVal.tg);
+    
+    // motor_rf.setSpeed(700);
     
     Serial.printf("%f,%f,%f,%f,%f,%f\n",   // VOFA 串口输出
         motor_lf.rateVal.ms, motor_lf.rateVal.out, motor_lf.rateVal.tg, 
         motor_lf.posVal.ms, motor_lf.posVal.out, motor_lf.posVal.tg);
-
   }
 };
 
@@ -80,7 +94,9 @@ void setup()
   Serial.printf("Start!\n");
   vofa.begin(Serial); // 初始化串口增强类
 
-  xTaskCreate(motor_control, "motor_control", 2048, NULL, 1, NULL);
+  xTaskCreate(motor_control, "motor_control", 4096, NULL, 1, NULL);
+  
+  // motor_rf.setSpeed(700);
 };
 
 

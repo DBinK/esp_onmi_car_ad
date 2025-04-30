@@ -51,12 +51,12 @@ class Motor {
             if (rate > 0) {
                 ledcWrite(_FW_CHANNEL, pwmValue);
                 ledcWrite(_BW_CHANNEL, 0);
-                // Serial.printf("+%ld\n", pwmValue);
+                // Serial.printf("+%d\n", pwmValue);
 
             } else if (rate < 0) {
                 ledcWrite(_FW_CHANNEL, 0);
                 ledcWrite(_BW_CHANNEL, pwmValue);
-                // Serial.printf("-%ld\n", pwmValue);
+                // Serial.printf("-%d\n", pwmValue);
                 
             } else {
                 ledcWrite(_FW_CHANNEL, 0);
@@ -71,6 +71,19 @@ class Motor {
         void setSpeedLimit(uint16_t THR_MIN, uint16_t THR_MAX) {
             _THR_MIN = THR_MIN;
             _THR_MAX = THR_MAX;
+        }
+
+        /**
+         * @brief 打印电机参数
+         */
+        void print() {
+            Serial.printf("FW_PIN: %d\n", _FW_PIN);
+            Serial.printf("BW_PIN: %d\n", _BW_PIN);
+            Serial.printf("FW_CHANNEL: %d\n", _FW_CHANNEL);
+            Serial.printf("BW_CHANNEL: %d\n", _BW_CHANNEL);
+            Serial.printf("freq: %d\n", _freq);
+            Serial.printf("THR_MIN: %d\n", _THR_MIN);
+            Serial.printf("THR_MAX: %d\n", _THR_MAX);
         }
     
     private:

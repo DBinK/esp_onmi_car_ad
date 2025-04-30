@@ -12,21 +12,18 @@ class MotorController
 {
 public:
     MotorController(PIDConfig _POS, PIDConfig _RATE,
-        PIDCtrlVal _posVal, PIDCtrlVal _rateVal,
         EncoderConfig _encoderCfg, MotorConfig _motorCfg, 
         uint32_t SampleTimeUs):
 
         // PID配置和中间变量
         POS(_POS), RATE(_RATE),
-        posVal(_posVal), rateVal(_rateVal),
         encoderCfg(_encoderCfg), motorCfg(_motorCfg),
 
         // 电机用对象
         encoder(encoderCfg.PINA, encoderCfg.PINB),
-        // motor(motorCfg.FW_PIN, motorCfg.BW_PIN,
-        //         motorCfg.FW_CHANNEL, motorCfg.BW_CHANNEL,
-        //         motorCfg.freq, motorCfg.THR_MIN, motorCfg.THR_MAX),
-        motor(1, 2, 0, 1, 0, 1023),
+        motor(motorCfg.FW_PIN, motorCfg.BW_PIN,
+                motorCfg.FW_CHANNEL, motorCfg.BW_CHANNEL,
+                motorCfg.freq, motorCfg.THR_MIN, motorCfg.THR_MAX),
 
         pidRate(&rateVal.ms, &rateVal.out, &rateVal.tg,
                 RATE.P, RATE.I, RATE.D,
@@ -61,6 +58,10 @@ public:
     PIDCtrlVal posVal, rateVal;
     EncoderConfig encoderCfg;
     MotorConfig motorCfg;
+    
+    HXC::Encoder encoder;
+    Motor motor;
+    QuickPID pidRate, pidPos;
 
     void PIDCompute(uint8_t mode = -1) {
         posVal.ms  = encoder.get_count();
@@ -96,10 +97,13 @@ public:
     } 
 
     void setPIDcfg(PIDConfig _POS, PIDConfig _RATE) {
-        pidPos.SetTunings(_POS.P, _POS.I, _POS.D);
-        pidRate.SetTunings(_RATE.P, _RATE.I, _RATE.D);
-        pidRate.Reset();
-        pidPos.Reset();   
+
+        POS = _POS;
+        RATE = _RATE;
+
+        pidPos.SetTunings(POS.P, POS.I, POS.D);
+        pidRate.SetTunings(RATE.P, RATE.I, RATE.D);
+
         Serial.printf("PID参数更新 pos: %f, %f, %f ; rate: %f, %f, %f \n", POS.P, POS.I, POS.D, RATE.P, RATE.I, RATE.D);
     }    
     
@@ -134,14 +138,11 @@ public:
     }
 
     void setMotorSpeedDirect(int16_t rate) {
+        Serial.printf("直接设置电机速度 %d \n", rate);
         motor.setSpeed(rate);
+        motor.print();
     }
     
-protected:
-    HXC::Encoder encoder;
-    Motor motor;
-
-    QuickPID pidRate, pidPos;
 };
 
 #endif
