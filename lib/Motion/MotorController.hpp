@@ -42,13 +42,11 @@ public:
 
         pidRate.SetMode(1);
         pidRate.SetSampleTimeUs(SampleTimeUs);
-        // pidRate.SetOutputLimits(-motorCfg.THR_MAX, motorCfg.THR_MAX);
-        pidRate.SetOutputLimits(-9500, 9500);
+        pidRate.SetOutputLimits(-motorCfg.THR_MAX, motorCfg.THR_MAX);
 
         pidPos.SetMode(1);
         pidPos.SetSampleTimeUs(SampleTimeUs);
-        // pidPos.SetOutputLimits(-motorCfg.THR_MAX*10, motorCfg.THR_MAX*10);
-        pidPos.SetOutputLimits(-15000,  15000);
+        pidPos.SetOutputLimits(-motorCfg.THR_MAX*10, motorCfg.THR_MAX*10);
 
         rateVal.tg = 0;
         posVal.tg = 0;
@@ -69,7 +67,7 @@ public:
 
         if (POS.P > 0 && RATE.P > 0) {  // 位置环和速度环一起控制
             pidPos.Compute();   
-            rateVal.tg = posVal.out; // 让位置环的输出作为速度环的输入
+            rateVal.tg = posVal.out;    // 让位置环的输出作为速度环的输入
             pidRate.Compute();   
             motor.setSpeed(rateVal.out);
             Serial.printf("位置环和速度环一起控制 %f, %f \n", posVal.out, rateVal.out);
